@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Պարզ Նշումներ</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --btn-bg: #0d6efd;
+            --btn-text: #ffffff;
+            --font-size: 16px;
+        }
+
+        body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --btn-bg: #bb86fc;
+            --btn-text: #121212;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .controls, .settings {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            font-size: var(--font-size);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            resize: none;
+        }
+
+        .note-card {
+            background-color: var(--card-bg);
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: var(--font-size);
+            word-break: break-word;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>📝 Իմ Նշումները</h2>
+
+    <!-- Կարգավորումներ (Մուգ ռեժիմ և տառաչափ) -->
+    <div class="settings">
+        <button onclick="toggleDarkMode()">🌙 / ☀️ Ռեժիմ</button>
+        <div>
+            Տառաչափ: 
+            <button onclick="changeFontSize(-2)">A-</button>
+            <button onclick="changeFontSize(2)">A+</button>
+        </div>
+    </div>
+
+    <!-- Նշում գրելու դաշտ -->
+    <textarea id="noteInput" placeholder="Գրեք ձեր նշումը այստեղ..."></textarea>
+    
+    <div class="controls">
+        <button onclick="saveNote()">Ավելացնել նշում</button>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #ccc; margin: 16px 0;">
+
+    <!-- Նշումների ցանկ -->
+    <div id="notesList"></div>
+
+    <script>
+        let currentFontSize = 16;
+
+        // Բացելիս բեռնել պահպանված նշումները և կարգավորումները
+        window.onload = function() {
+            loadNotes();
+            if(localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+            if(localStorage.getItem('fontSize')) {
+                currentFontSize = parseInt(localStorage.getItem('fontSize'));
+                updateFontSize();
+            }
+        };
+
+        function saveNote() {
+            const input = document.getElementById('noteInput');
+            const text = input.value.trim();
+            if(text === '') return;
+
+            let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+            notes.push(text);
+            localStorage.setItem('notes', JSON.stringify(notes));
+
+            input.value = '';
+            loadNotes();
+        }
+
+        function loadNotes() {
+            const list = document.getElementById('notesList');
+            list.innerHTML = '';
+            let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+
+            notes.forEach((note, index) => {
+                const card = document.createElement('div');
+                card.className = 'note-card';
+                card.innerHTML = `
+                    <span>${note}</span>
+                    <button class="delete-btn" onclick="deleteNote(${index})">Ջնջել</button>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function deleteNote(index) {
+            let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+            notes.splice(index, 1);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            loadNotes();
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            let isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        function changeFontSize(amount) {
+            currentFontSize += amount;
+            if(currentFontSize < 12) currentFontSize = 12;
+            if(currentFontSize > 28) currentFontSize = 28;
+            updateFontSize();
+        }
+
+        function updateFontSize() {
+            document.documentElement.style.setProperty('--font-size', currentFontSize + 'px');
+            localStorage.setItem('fontSize', currentFontSize);
+        }
+    </script>
+</body>
+</html>
